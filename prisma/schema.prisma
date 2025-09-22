@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Visibility {
+  PRIVATE
+  LINK
+  PUBLIC
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum VoteValue {
+  UP
+  DOWN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?  @unique
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relations
+  playlists      Playlist[]        @relation("UserPlaylists")
+  memberships    Membership[]
+  addedTracks    PlaylistTrack[]   @relation("AddedBy")
+  votes          Vote[]
+  comments       Comment[]
+}
+
+model Playlist {
+  id          String      @id @default(cuid())
+  ownerId     String
+  title       String
+  description String?     @db.Text
+  visibility  Visibility  @default(PRIVATE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // relations
+  owner       User        @relation("UserPlaylists", fields: [ownerId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+  tracks      PlaylistTrack[]
+  comments    Comment[]
+
+  @@index([ownerId])
+  @@index([visibility])
+}
+
+model Membership {
+  userId     String
+  playlistId String
+  role       Role        @default(VIEWER)
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@id([userId, playlistId])
+  @@index([playlistId])
+  @@index([role])
+}
+
+model Track {
+  id              String   @id @default(cuid())
+  provider        String   // e.g., "spotify"
+  providerTrackId String   // Spotify track id
+  title           String
+  artist          String
+  album           String?
+  durationMs      Int
+  artwork         String?  // URL
+  previewUrl      String?  // 30s preview
+
+  // relations
+  inPlaylists     PlaylistTrack[]
+
+  @@unique([provider, providerTrackId])
+  @@index([title])
+  @@index([artist])
+}
+
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  playlistId String
+  trackId    String
+  addedById  String
+  position   Int      // 0-based position for manual ordering
+  createdAt  DateTime @default(now())
+
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track      Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  addedBy    User     @relation("AddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+
+  votes      Vote[]
+
+  // Allow duplicates for UX-friendly “duplicate detection” (app logic warns)
+  // If you want to hard-prevent duplicates, uncomment:
+  // @@unique([playlistId, trackId])
+
+  @@index([playlistId])
+  @@index([trackId])
+  @@unique([playlistId, position]) // maintain stable ordering per playlist
+}
+
+model Vote {
+  id               String     @id @default(cuid())
+  playlistTrackId  String
+  userId           String
+  value            VoteValue
+
+  playlistTrack    PlaylistTrack @relation(fields: [playlistTrackId], references: [id], onDelete: Cascade)
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistTrackId, userId]) // one vote per user per track
+  @@index([userId])
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  playlistId String
+  userId     String
+  body       String   @db.Text
+  createdAt  DateTime @default(now())
+
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([playlistId])
+  @@index([userId])
+}
