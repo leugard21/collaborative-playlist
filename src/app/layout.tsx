@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { Header } from '@/components/shell/header'
 import { BottomNav } from '@/components/shell/bottom-nav'
 import { Toaster } from '@/components/ui/sonner'
+import { AuthSessionProvider } from '@/components/providers/session-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,12 +25,14 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <TooltipProvider>
-            <Header />
-            <main className="mx-auto min-h-[calc(100vh-3.5rem)] max-w-screen-xl px-4 pt-4 pb-16">
-              {children}
-            </main>
-            <BottomNav />
-            <Toaster />
+            <AuthSessionProvider>
+              <Header />
+              <main className="mx-auto min-h-[calc(100vh-3.5rem)] max-w-screen-xl px-4 pt-4 pb-16">
+                {children}
+              </main>
+              <BottomNav />
+              <Toaster richColors position="top-center" />
+            </AuthSessionProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>
