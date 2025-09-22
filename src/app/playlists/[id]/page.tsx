@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { auth } from '@/lib/session'
 import { VoteButton } from '@/components/playlists/vote-button'
 import { RealtimePlaylistClient } from '@/components/playlists/realtime-playlist-client'
+import { CommentForm } from '@/components/playlists/comment-form'
+import { CommentList } from '@/components/playlists/comment-list'
 
 type Props = { params: { id: string } }
 
@@ -50,6 +52,13 @@ export default async function PlaylistDetailPage({ params }: Props) {
   })
 
   items.sort((a, b) => b.score - a.score || a.position - b.position)
+
+  const comments = await prisma.comment.findMany({
+    where: { playlistId: params.id },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+    include: { user: { select: { id: true, name: true, image: true } } },
+  })
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -109,9 +118,25 @@ export default async function PlaylistDetailPage({ params }: Props) {
             )}
           </ol>
         </CardContent>
-
-        <RealtimePlaylistClient playlistId={playlist.id} />
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Comments</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <CommentForm playlistId={playlist.id} />
+          <CommentList
+            playlistId={playlist.id}
+            initial={comments.map((c) => ({
+              ...c,
+              createdAt: c.createdAt.toISOString(),
+            }))}
+          />
+        </CardContent>
+      </Card>
+
+      <RealtimePlaylistClient playlistId={playlist.id} />
     </div>
   )
 }
