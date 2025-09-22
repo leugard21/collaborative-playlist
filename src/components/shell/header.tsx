@@ -28,7 +28,12 @@ export function Header() {
               <Button asChild variant="outline" size="sm">
                 <Link href="/profile">Profile</Link>
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => signOut()}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => signOut()}
+                className="cursor-pointer"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
               </Button>
