@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AddTrackDialog } from '@/components/playlists/add-track-dialog'
+import Image from 'next/image'
 
 type Props = { params: { id: string } }
 
@@ -52,10 +53,23 @@ export default async function PlaylistDetailPage({ params }: Props) {
             ) : (
               playlist.tracks.map((pt) => (
                 <li key={pt.id} className="flex items-center justify-between gap-3 p-3">
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{pt.track.title}</div>
-                    <div className="text-muted-foreground truncate text-xs">
-                      {pt.track.artist} {pt.track.album ? `• ${pt.track.album}` : ''}
+                  <div className="flex min-w-0 items-center gap-3">
+                    {pt.track.artwork ? (
+                      <Image
+                        src={pt.track.artwork}
+                        alt=""
+                        width={48}
+                        height={48}
+                        className="h-12 w-12 flex-shrink-0 rounded border object-cover"
+                      />
+                    ) : (
+                      <div className="bg-muted h-12 w-12 flex-shrink-0 rounded" aria-hidden />
+                    )}
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium">{pt.track.title}</div>
+                      <div className="text-muted-foreground truncate text-xs">
+                        {pt.track.artist} {pt.track.album ? `• ${pt.track.album}` : ''}
+                      </div>
                     </div>
                   </div>
                   <div className="text-muted-foreground text-xs tabular-nums">
