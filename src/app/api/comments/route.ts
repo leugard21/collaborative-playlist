@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/session'
 import { pusherServer } from '@/lib/realtime'
+import { canComment, getMemberRole } from '@/lib/access'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -31,6 +32,9 @@ export async function POST(req: Request) {
     data: { playlistId, userId: session.user.id, body },
     include: { user: { select: { id: true, name: true, image: true } } },
   })
+
+  const { role } = await getMemberRole(session.user.id, playlistId)
+  if (!canComment(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   await pusherServer.trigger(`playlist-${playlistId}`, 'comment:add', {
     id: comment.id,

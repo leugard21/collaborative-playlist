@@ -11,6 +11,7 @@ import { CommentList } from '@/components/playlists/comment-list'
 import { NowPlayingCard } from '@/components/now-playing/now-playing-card'
 import { InviteButton } from '@/components/playlists/invite-button'
 import { boolean } from 'zod'
+import { RemoveTrackButton } from '@/components/playlists/remove-track-button'
 
 type Props = { params: { id: string } }
 
@@ -51,6 +52,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
 
   let isMember = false
   let memberRole: 'OWNER' | 'EDITOR' | 'VIEWER' | null = null
+
   if (userId) {
     const m = await prisma.membership.findUnique({
       where: { userId_playlistId: { userId, playlistId: playlist.id } },
@@ -59,6 +61,11 @@ export default async function PlaylistDetailPage({ params }: Props) {
     isMember = Boolean(m)
     memberRole = (m?.role as unknown as typeof memberRole) ?? null
   }
+
+  const role: 'OWNER' | 'EDITOR' | 'VIEWER' | null = isOwner ? 'OWNER' : memberRole
+  const canEditUI = role === 'OWNER' || role === 'EDITOR'
+  const canCommentUI = role === 'OWNER' || role === 'EDITOR'
+  const canVoteUI = role === 'OWNER' || role === 'EDITOR' || role === 'VIEWER'
 
   const canView = playlist.visibility === 'PUBLIC' || isOwner || isMember
 
@@ -98,7 +105,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="truncate">{playlist.title}</CardTitle>
-          <AddTrackDialog playlistId={playlist.id} />
+          {canEditUI && <AddTrackDialog playlistId={playlist.id} />}
         </CardHeader>
         <CardContent className="space-y-4">
           {playlist.description ? (
@@ -145,6 +152,8 @@ export default async function PlaylistDetailPage({ params }: Props) {
                       score={pt.score}
                       userVote={pt.userVote as 0 | 1 | -1}
                     />
+
+                    {canEditUI && <RemoveTrackButton playlistTrackId={pt.id} />}
                   </div>
                 </li>
               ))
@@ -158,7 +167,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
           <CardTitle>Comments</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <CommentForm playlistId={playlist.id} />
+          {canCommentUI && <CommentForm playlistId={playlist.id} />}
           <CommentList
             playlistId={playlist.id}
             initial={comments.map((c) => ({

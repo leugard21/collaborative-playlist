@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/session'
 import { pusherServer } from '@/lib/realtime'
+import { canVote, getMemberRole } from '@/lib/access'
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -18,6 +19,9 @@ export async function POST(req: Request) {
     select: { playlistId: true },
   })
   if (!pt) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const { role } = await getMemberRole(userId, pt.playlistId)
+  if (!canVote(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   if (value === 0) {
     await prisma.vote.deleteMany({ where: { playlistTrackId, userId } })

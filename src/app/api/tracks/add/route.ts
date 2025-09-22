@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/session'
 import { pusherServer } from '@/lib/realtime'
+import { canEdit, getMemberRole } from '@/lib/access'
 
 export async function POST(req: Request) {
   const session = await auth()
+  const userId = session?.user?.id
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const json = await req.json().catch(() => null)
   if (!json) return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
@@ -25,6 +28,9 @@ export async function POST(req: Request) {
   if (!playlistId || !providerTrackId || !title || !artist) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
+
+  const { role } = await getMemberRole(userId, playlistId)
+  if (!canEdit(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const dup = await prisma.playlistTrack.findFirst({
     where: { playlistId, track: { provider, providerTrackId } },
