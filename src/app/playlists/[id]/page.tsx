@@ -9,6 +9,8 @@ import { RealtimePlaylistClient } from '@/components/playlists/realtime-playlist
 import { CommentForm } from '@/components/playlists/comment-form'
 import { CommentList } from '@/components/playlists/comment-list'
 import { NowPlayingCard } from '@/components/now-playing/now-playing-card'
+import { InviteButton } from '@/components/playlists/invite-button'
+import { boolean } from 'zod'
 
 type Props = { params: { id: string } }
 
@@ -22,6 +24,8 @@ export default async function PlaylistDetailPage({ params }: Props) {
       id: true,
       title: true,
       description: true,
+      ownerId: true,
+      visibility: true,
       tracks: {
         select: {
           id: true,
@@ -42,6 +46,32 @@ export default async function PlaylistDetailPage({ params }: Props) {
     },
   })
   if (!playlist) notFound()
+
+  const isOwner = userId == playlist.ownerId
+
+  let isMember = false
+  let memberRole: 'OWNER' | 'EDITOR' | 'VIEWER' | null = null
+  if (userId) {
+    const m = await prisma.membership.findUnique({
+      where: { userId_playlistId: { userId, playlistId: playlist.id } },
+      select: { role: true },
+    })
+    isMember = Boolean(m)
+    memberRole = (m?.role as unknown as typeof memberRole) ?? null
+  }
+
+  const canView = playlist.visibility === 'PUBLIC' || isOwner || isMember
+
+  if (!canView) {
+    return (
+      <div className="text-muted-foreground mx-auto max-w-md text-sm">
+        You don&apos;t have access to this playlist.
+        {playlist.visibility === 'LINK' ? (
+          <div className="mt-2">Ask the owner for an invite link.</div>
+        ) : null}
+      </div>
+    )
+  }
 
   const items = playlist.tracks.map((pt) => {
     const up = pt.votes.filter((v) => v.value === 'UP').length
@@ -64,6 +94,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <NowPlayingCard />
+      {isOwner && <InviteButton playlistId={playlist.id} />}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="truncate">{playlist.title}</CardTitle>

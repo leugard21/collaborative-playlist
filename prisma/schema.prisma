@@ -26,23 +26,24 @@ enum VoteValue {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String?  @unique
-  image     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   emailVerified DateTime?
 
-  playlists      Playlist[]        @relation("UserPlaylists")
-  memberships    Membership[]
-  addedTracks    PlaylistTrack[]   @relation("AddedBy")
-  votes          Vote[]
-  comments       Comment[]
+  playlists   Playlist[]      @relation("UserPlaylists")
+  memberships Membership[]
+  addedTracks PlaylistTrack[] @relation("AddedBy")
+  votes       Vote[]
+  comments    Comment[]
 
   Account Account[]
 
   Session Session[]
+  Invite  Invite[]
 }
 
 model Account {
@@ -51,15 +52,15 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?  @db.Text
-  access_token      String?  @db.Text
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?  @db.Text
+  id_token          String? @db.Text
   session_state     String?
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -85,31 +86,31 @@ model VerificationToken {
 }
 
 model Playlist {
-  id          String      @id @default(cuid())
+  id          String     @id @default(cuid())
   ownerId     String
   title       String
-  description String?     @db.Text
-  visibility  Visibility  @default(PRIVATE)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  description String?    @db.Text
+  visibility  Visibility @default(PRIVATE)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   // relations
-  owner       User        @relation("UserPlaylists", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User            @relation("UserPlaylists", fields: [ownerId], references: [id], onDelete: Cascade)
   memberships Membership[]
   tracks      PlaylistTrack[]
   comments    Comment[]
+  Invite      Invite[]
 
-  @@index([ownerId])
-  @@index([visibility])
+  @@index([ownerId, visibility])
 }
 
 model Membership {
   userId     String
   playlistId String
-  role       Role        @default(VIEWER)
+  role       Role   @default(VIEWER)
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
 
   @@id([userId, playlistId])
   @@index([playlistId])
@@ -117,18 +118,18 @@ model Membership {
 }
 
 model Track {
-  id              String   @id @default(cuid())
-  provider        String   // e.g., "spotify"
-  providerTrackId String   // Spotify track id
+  id              String  @id @default(cuid())
+  provider        String // e.g., "spotify"
+  providerTrackId String // Spotify track id
   title           String
   artist          String
   album           String?
   durationMs      Int
-  artwork         String?  // URL
-  previewUrl      String?  // 30s preview
+  artwork         String? // URL
+  previewUrl      String? // 30s preview
 
   // relations
-  inPlaylists     PlaylistTrack[]
+  inPlaylists PlaylistTrack[]
 
   @@unique([provider, providerTrackId])
   @@index([title])
@@ -140,32 +141,32 @@ model PlaylistTrack {
   playlistId String
   trackId    String
   addedById  String
-  position   Int      // 0-based position for manual ordering
+  position   Int // 0-based position for manual ordering
   createdAt  DateTime @default(now())
 
-  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
-  track      Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
-  addedBy    User     @relation("AddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track    Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  addedBy  User     @relation("AddedBy", fields: [addedById], references: [id], onDelete: SetNull)
 
-  votes      Vote[]
+  votes Vote[]
 
   // Allow duplicates for UX-friendly “duplicate detection” (app logic warns)
   // If you want to hard-prevent duplicates, uncomment:
   // @@unique([playlistId, trackId])
 
+  @@unique([playlistId, position]) // maintain stable ordering per playlist
   @@index([playlistId])
   @@index([trackId])
-  @@unique([playlistId, position]) // maintain stable ordering per playlist
 }
 
 model Vote {
-  id               String     @id @default(cuid())
-  playlistTrackId  String
-  userId           String
-  value            VoteValue
+  id              String    @id @default(cuid())
+  playlistTrackId String
+  userId          String
+  value           VoteValue
 
-  playlistTrack    PlaylistTrack @relation(fields: [playlistTrackId], references: [id], onDelete: Cascade)
-  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlistTrack PlaylistTrack @relation(fields: [playlistTrackId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([playlistTrackId, userId]) // one vote per user per track
   @@index([userId])
@@ -178,9 +179,26 @@ model Comment {
   body       String   @db.Text
   createdAt  DateTime @default(now())
 
-  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([playlistId])
   @@index([userId])
+}
+
+model Invite {
+  id          String    @id @default(cuid())
+  playlistId  String
+  createdById String
+  role        Role      @default(VIEWER)
+  token       String    @unique
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  revoked     Boolean   @default(false)
+
+  playlist  Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  createdBy User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([playlistId])
+  @@index([createdById])
 }
