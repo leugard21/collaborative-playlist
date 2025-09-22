@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/session'
+import { pusherServer } from '@/lib/realtime'
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -72,6 +73,9 @@ export async function POST(req: Request) {
     },
     select: { id: true },
   })
+
+  const payload = { playlistTrackId: pt.id }
+  await pusherServer.trigger(`playlist-${playlistId}`, 'track:add', payload)
 
   return NextResponse.json({ id: pt.id }, { status: 201 })
 }

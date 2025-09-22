@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/session'
+import { pusherServer } from '@/lib/realtime'
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -12,15 +13,24 @@ export async function POST(req: Request) {
 
   const userId = session.user.id
 
+  const pt = await prisma.playlistTrack.findUnique({
+    where: { id: playlistTrackId },
+    select: { playlistId: true },
+  })
+  if (!pt) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
   if (value === 0) {
     await prisma.vote.deleteMany({ where: { playlistTrackId, userId } })
-    return NextResponse.json({ ok: true })
+  } else {
+    await prisma.vote.upsert({
+      where: { playlistTrackId_userId: { playlistTrackId, userId } },
+      update: { value: value === 1 ? 'UP' : 'DOWN' },
+      create: { playlistTrackId, userId, value: value === 1 ? 'UP' : 'DOWN' },
+    })
   }
 
-  await prisma.vote.upsert({
-    where: { playlistTrackId_userId: { playlistTrackId, userId } },
-    update: { value: value === 1 ? 'UP' : 'DOWN' },
-    create: { playlistTrackId, userId, value: value === 1 ? 'UP' : 'DOWN' },
+  await pusherServer.trigger(`playlist-${pt.playlistId}`, 'vote:change', {
+    playlistTrackId,
   })
 
   return NextResponse.json({ ok: true })

@@ -5,6 +5,7 @@ import { AddTrackDialog } from '@/components/playlists/add-track-dialog'
 import Image from 'next/image'
 import { auth } from '@/lib/session'
 import { VoteButton } from '@/components/playlists/vote-button'
+import { RealtimePlaylistClient } from '@/components/playlists/realtime-playlist-client'
 
 type Props = { params: { id: string } }
 
@@ -108,6 +109,8 @@ export default async function PlaylistDetailPage({ params }: Props) {
             )}
           </ol>
         </CardContent>
+
+        <RealtimePlaylistClient playlistId={playlist.id} />
       </Card>
     </div>
   )
