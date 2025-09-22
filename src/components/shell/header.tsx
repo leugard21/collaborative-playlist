@@ -1,10 +1,12 @@
 'use client'
 import Link from 'next/link'
-import { PlusCircle, Music2 } from 'lucide-react'
+import { PlusCircle, Music2, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { SignInOutButton } from '@/components/auth/sign-in-out'
+import { signOut, useSession } from 'next-auth/react'
 
 export function Header() {
+  const { data: session, status } = useSession()
+
   return (
     <header className="bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex h-14 max-w-screen-xl items-center justify-between px-4">
@@ -12,6 +14,7 @@ export function Header() {
           <Music2 className="h-5 w-5" />
           <span className="font-semibold">Collaborative Playlist</span>
         </Link>
+
         <div className="flex items-center gap-2">
           <Button asChild size="sm">
             <Link href="/playlists/new" aria-label="Create playlist">
@@ -19,7 +22,22 @@ export function Header() {
               Create
             </Link>
           </Button>
-          <SignInOutButton />
+
+          {status === 'loading' ? null : session?.user ? (
+            <>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/profile">Profile</Link>
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => signOut()}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <Button asChild size="sm">
+              <Link href="/login">Sign in</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>
