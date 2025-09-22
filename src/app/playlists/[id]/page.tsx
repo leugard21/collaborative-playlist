@@ -8,6 +8,7 @@ import { VoteButton } from '@/components/playlists/vote-button'
 import { RealtimePlaylistClient } from '@/components/playlists/realtime-playlist-client'
 import { CommentForm } from '@/components/playlists/comment-form'
 import { CommentList } from '@/components/playlists/comment-list'
+import { NowPlayingCard } from '@/components/now-playing/now-playing-card'
 
 type Props = { params: { id: string } }
 
@@ -62,6 +63,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <NowPlayingCard />
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="truncate">{playlist.title}</CardTitle>

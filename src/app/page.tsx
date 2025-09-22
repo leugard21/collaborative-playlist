@@ -3,6 +3,7 @@ import { auth } from '@/lib/session'
 import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { NowPlayingCard } from '@/components/now-playing/now-playing-card'
 
 export default async function HomePage() {
   const session = await auth()
@@ -17,6 +18,7 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
+      <NowPlayingCard />
       <Card>
         <CardHeader>
           <CardTitle>Collaborative Playlist</CardTitle>
