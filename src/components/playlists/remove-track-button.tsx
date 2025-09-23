@@ -1,11 +1,11 @@
 'use client'
 
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Trash2 } from 'lucide-react'
 
 export function RemoveTrackButton({ playlistTrackId }: { playlistTrackId: string }) {
-  async function removeIt() {
+  async function onRemove() {
     try {
       const res = await fetch('/api/tracks/remove', {
         method: 'POST',
@@ -13,10 +13,9 @@ export function RemoveTrackButton({ playlistTrackId }: { playlistTrackId: string
         body: JSON.stringify({ playlistTrackId }),
       })
       if (!res.ok) throw new Error()
-      toast.success('Removed')
-      location.reload()
+      toast.success('Track removed')
     } catch {
-      toast.error('Could not remove')
+      toast.error('Could not remove track')
     }
   }
 
@@ -25,10 +24,10 @@ export function RemoveTrackButton({ playlistTrackId }: { playlistTrackId: string
       variant="ghost"
       size="icon"
       aria-label="Remove track"
-      onClick={removeIt}
       className="h-8 w-8"
+      onClick={onRemove}
     >
-      <Trash2 className="h-4 w-4" />
+      <X className="h-4 w-4" />
     </Button>
   )
 }

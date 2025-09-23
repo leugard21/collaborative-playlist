@@ -49,7 +49,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
   })
   if (!playlist) notFound()
 
-  const isOwner = userId == playlist.ownerId
+  const isOwner = userId === playlist.ownerId
 
   let isMember = false
   let memberRole: 'OWNER' | 'EDITOR' | 'VIEWER' | null = null
@@ -66,7 +66,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
   const role: 'OWNER' | 'EDITOR' | 'VIEWER' | null = isOwner ? 'OWNER' : memberRole
   const canEditUI = role === 'OWNER' || role === 'EDITOR'
   const canCommentUI = role === 'OWNER' || role === 'EDITOR'
-  const canVoteUI = role === 'OWNER' || role === 'EDITOR' || role === 'VIEWER'
+  const canVoteUI = Boolean(role)
 
   const canView = playlist.visibility === 'PUBLIC' || isOwner || isMember
 
@@ -90,7 +90,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
     return { ...pt, score, userVote }
   })
 
-  items.sort((a, b) => b.score - a.score || a.position - b.position)
+  items.sort((a, b) => a.position - b.position)
 
   const comments = await prisma.comment.findMany({
     where: { playlistId: params.id },
@@ -110,6 +110,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
     <div className="mx-auto max-w-3xl space-y-6">
       <NowPlayingCard />
       {isOwner && <InviteButton playlistId={playlist.id} />}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="truncate">{playlist.title}</CardTitle>
@@ -124,8 +125,8 @@ export default async function PlaylistDetailPage({ params }: Props) {
             {items.length === 0 ? (
               <li className="text-muted-foreground p-4 text-sm">No tracks yet.</li>
             ) : (
-              items.map((pt) => (
-                <li key={pt.id} className="flex items-center justify-between gap-3 p-3">
+              items.map((pt, idx) => (
+                <li key={pt.id} className="p-3">
                   <div className="flex min-w-0 items-center gap-3">
                     {pt.track.artwork ? (
                       <Image
@@ -139,37 +140,67 @@ export default async function PlaylistDetailPage({ params }: Props) {
                       <div className="bg-muted h-12 w-12 flex-shrink-0 rounded" aria-hidden />
                     )}
 
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{pt.track.title}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
+                        {pt.track.title}
+                        <span className="text-muted-foreground ml-2 text-xs">({pt.score})</span>
+                      </div>
                       <div className="text-muted-foreground truncate text-xs">
                         {pt.track.artist} {pt.track.album ? `• ${pt.track.album}` : ''}
                       </div>
+
+                      <div className="text-muted-foreground mt-1 text-xs tabular-nums sm:hidden">
+                        {formatMs(pt.track.durationMs)}
+                      </div>
+                    </div>
+
+                    <div className="hidden flex-shrink-0 items-center gap-3 sm:flex">
+                      <span
+                        className="text-muted-foreground w-12 text-right text-xs tabular-nums"
+                        aria-label="Duration"
+                      >
+                        {formatMs(pt.track.durationMs)}
+                      </span>
+
+                      {canEditUI && (
+                        <ReorderButtons
+                          playlistTrackId={pt.id}
+                          index={idx}
+                          maxIndex={items.length - 1}
+                        />
+                      )}
+
+                      {canVoteUI && (
+                        <VoteButton
+                          playlistTrackId={pt.id}
+                          score={pt.score}
+                          userVote={pt.userVote as 0 | 1 | -1}
+                        />
+                      )}
+
+                      {canEditUI && <RemoveTrackButton playlistTrackId={pt.id} />}
                     </div>
                   </div>
 
-                  <div className="flex flex-shrink-0 items-center gap-3">
-                    <span
-                      className="text-muted-foreground w-12 text-right text-xs tabular-nums"
-                      aria-label="Duration"
-                    >
-                      {formatMs(pt.track.durationMs)}
-                    </span>
-
-                    {canEditUI && (
-                      <ReorderButtons
-                        playlistTrackId={pt.id}
-                        index={items.findIndex((x) => x.id === pt.id)}
-                        maxIndex={items.length - 1}
-                      />
-                    )}
-
-                    <VoteButton
-                      playlistTrackId={pt.id}
-                      score={pt.score}
-                      userVote={pt.userVote as 0 | 1 | -1}
-                    />
-
-                    {canEditUI && <RemoveTrackButton playlistTrackId={pt.id} />}
+                  <div className="mt-2 flex items-center justify-between sm:hidden">
+                    <span className="sr-only">Controls</span>
+                    <div className="ml-auto flex items-center gap-2">
+                      {canEditUI && (
+                        <ReorderButtons
+                          playlistTrackId={pt.id}
+                          index={idx}
+                          maxIndex={items.length - 1}
+                        />
+                      )}
+                      {canVoteUI && (
+                        <VoteButton
+                          playlistTrackId={pt.id}
+                          score={pt.score}
+                          userVote={pt.userVote as 0 | 1 | -1}
+                        />
+                      )}
+                      {canEditUI && <RemoveTrackButton playlistTrackId={pt.id} />}
+                    </div>
                   </div>
                 </li>
               ))
@@ -201,7 +232,10 @@ export default async function PlaylistDetailPage({ params }: Props) {
         <CardContent>
           <ActivityList
             playlistId={playlist.id}
-            initial={activity.map((a) => ({ ...a, createdAt: a.createdAt.toISOString() }))}
+            initial={activity.map((a) => ({
+              ...a,
+              createdAt: a.createdAt.toISOString(),
+            }))}
           />
         </CardContent>
       </Card>

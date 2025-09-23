@@ -1,32 +1,42 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { Home, Search, ListMusic, Activity, User } from "lucide-react";
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { Home, Search, ListMusic, Activity, User } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const items = [
-  { href: "/", label: "Home", Icon: Home },
-  { href: "/search", label: "Search", Icon: Search },
-  { href: "/playlists", label: "Playlists", Icon: ListMusic },
-  { href: "/activity", label: "Activity", Icon: Activity },
-  { href: "/profile", label: "Profile", Icon: User },
-];
+  { href: '/', icon: Home, label: 'Home' },
+  { href: '/search', icon: Search, label: 'Search' },
+  { href: '/playlists', icon: ListMusic, label: 'Playlists' },
+  { href: '/activity', icon: Activity, label: 'Activity' },
+  { href: '/profile', icon: User, label: 'Profile' },
+]
 
 export function BottomNav() {
+  const pathname = usePathname()
+
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background sm:hidden">
-      <ul className="flex h-14 items-stretch justify-between">
-        {items.map(({ href, label, Icon }) => (
-          <li key={href} className="flex-1">
-            <Link
-              href={href}
-              className="flex h-full flex-col items-center justify-center text-xs"
-            >
-              <Icon className="mb-1 size-4" />
-              {label}
-            </Link>
-          </li>
-        ))}
+    <nav className="bg-background fixed right-0 bottom-0 left-0 z-50 border-t md:hidden">
+      <ul className="flex w-full">
+        {items.map(({ href, icon: Icon, label }) => {
+          const active = pathname === href || pathname.startsWith(href + '/')
+          return (
+            <li key={href} className="min-w-0 flex-1">
+              <Link
+                href={href}
+                className={cn(
+                  'flex w-full flex-col items-center justify-center py-2 text-xs',
+                  active ? 'text-primary' : 'text-muted-foreground',
+                )}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                <span className="truncate">{label}</span>
+              </Link>
+            </li>
+          )
+        })}
       </ul>
     </nav>
-  );
+  )
 }
