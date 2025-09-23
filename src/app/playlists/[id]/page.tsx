@@ -2,17 +2,14 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AddTrackDialog } from '@/components/playlists/add-track-dialog'
-import Image from 'next/image'
 import { auth } from '@/lib/session'
-import { VoteButton } from '@/components/playlists/vote-button'
 import { RealtimePlaylistClient } from '@/components/playlists/realtime-playlist-client'
 import { CommentForm } from '@/components/playlists/comment-form'
 import { CommentList } from '@/components/playlists/comment-list'
 import { NowPlayingCard } from '@/components/now-playing/now-playing-card'
 import { InviteButton } from '@/components/playlists/invite-button'
-import { RemoveTrackButton } from '@/components/playlists/remove-track-button'
-import { ReorderButtons } from '@/components/playlists/reorder-buttons'
 import { ActivityList } from '@/components/playlists/activity-list'
+import { PlaylistTracks } from '@/components/playlists/playlist-tracks'
 
 type Props = { params: { id: string } }
 
@@ -121,91 +118,7 @@ export default async function PlaylistDetailPage({ params }: Props) {
             <p className="text-muted-foreground text-sm">{playlist.description}</p>
           ) : null}
 
-          <ol className="divide-y rounded-md border">
-            {items.length === 0 ? (
-              <li className="text-muted-foreground p-4 text-sm">No tracks yet.</li>
-            ) : (
-              items.map((pt, idx) => (
-                <li key={pt.id} className="p-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    {pt.track.artwork ? (
-                      <Image
-                        src={pt.track.artwork}
-                        alt=""
-                        width={48}
-                        height={48}
-                        className="h-12 w-12 flex-shrink-0 rounded border object-cover"
-                      />
-                    ) : (
-                      <div className="bg-muted h-12 w-12 flex-shrink-0 rounded" aria-hidden />
-                    )}
-
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">
-                        {pt.track.title}
-                        <span className="text-muted-foreground ml-2 text-xs">({pt.score})</span>
-                      </div>
-                      <div className="text-muted-foreground truncate text-xs">
-                        {pt.track.artist} {pt.track.album ? `• ${pt.track.album}` : ''}
-                      </div>
-
-                      <div className="text-muted-foreground mt-1 text-xs tabular-nums sm:hidden">
-                        {formatMs(pt.track.durationMs)}
-                      </div>
-                    </div>
-
-                    <div className="hidden flex-shrink-0 items-center gap-3 sm:flex">
-                      <span
-                        className="text-muted-foreground w-12 text-right text-xs tabular-nums"
-                        aria-label="Duration"
-                      >
-                        {formatMs(pt.track.durationMs)}
-                      </span>
-
-                      {canEditUI && (
-                        <ReorderButtons
-                          playlistTrackId={pt.id}
-                          index={idx}
-                          maxIndex={items.length - 1}
-                        />
-                      )}
-
-                      {canVoteUI && (
-                        <VoteButton
-                          playlistTrackId={pt.id}
-                          score={pt.score}
-                          userVote={pt.userVote as 0 | 1 | -1}
-                        />
-                      )}
-
-                      {canEditUI && <RemoveTrackButton playlistTrackId={pt.id} />}
-                    </div>
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between sm:hidden">
-                    <span className="sr-only">Controls</span>
-                    <div className="ml-auto flex items-center gap-2">
-                      {canEditUI && (
-                        <ReorderButtons
-                          playlistTrackId={pt.id}
-                          index={idx}
-                          maxIndex={items.length - 1}
-                        />
-                      )}
-                      {canVoteUI && (
-                        <VoteButton
-                          playlistTrackId={pt.id}
-                          score={pt.score}
-                          userVote={pt.userVote as 0 | 1 | -1}
-                        />
-                      )}
-                      {canEditUI && <RemoveTrackButton playlistTrackId={pt.id} />}
-                    </div>
-                  </div>
-                </li>
-              ))
-            )}
-          </ol>
+          <PlaylistTracks items={items} canEdit={canEditUI} canVote={canVoteUI} />
         </CardContent>
       </Card>
 
