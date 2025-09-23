@@ -12,6 +12,7 @@ import { NowPlayingCard } from '@/components/now-playing/now-playing-card'
 import { InviteButton } from '@/components/playlists/invite-button'
 import { RemoveTrackButton } from '@/components/playlists/remove-track-button'
 import { ReorderButtons } from '@/components/playlists/reorder-buttons'
+import { ActivityList } from '@/components/playlists/activity-list'
 
 type Props = { params: { id: string } }
 
@@ -98,6 +99,13 @@ export default async function PlaylistDetailPage({ params }: Props) {
     include: { user: { select: { id: true, name: true, image: true } } },
   })
 
+  const activity = await prisma.activity.findMany({
+    where: { playlistId: playlist.id },
+    orderBy: { createdAt: 'desc' },
+    take: 30,
+    include: { actor: { select: { id: true, name: true, image: true } } },
+  })
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <NowPlayingCard />
@@ -182,6 +190,18 @@ export default async function PlaylistDetailPage({ params }: Props) {
               ...c,
               createdAt: c.createdAt.toISOString(),
             }))}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ActivityList
+            playlistId={playlist.id}
+            initial={activity.map((a) => ({ ...a, createdAt: a.createdAt.toISOString() }))}
           />
         </CardContent>
       </Card>

@@ -43,5 +43,15 @@ export async function POST(req: Request) {
     user: comment.user,
   })
 
+  await prisma.activity.create({
+    data: {
+      playlistId,
+      actorId: session.user.id,
+      type: 'COMMENT',
+      data: { commentId: comment.id },
+    },
+  })
+  await pusherServer.trigger(`playlist-${playlistId}`, 'activity:add', { type: 'COMMENT' })
+
   return NextResponse.json({ comment })
 }

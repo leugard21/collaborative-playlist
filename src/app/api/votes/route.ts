@@ -37,5 +37,15 @@ export async function POST(req: Request) {
     playlistTrackId,
   })
 
+  await prisma.activity.create({
+    data: {
+      playlistId: pt.playlistId,
+      actorId: userId,
+      type: 'VOTE',
+      data: { playlistTrackId, value },
+    },
+  })
+  await pusherServer.trigger(`playlist-${pt.playlistId}`, 'activity:add', { type: 'VOTE' })
+
   return NextResponse.json({ ok: true })
 }

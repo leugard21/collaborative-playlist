@@ -44,6 +44,8 @@ model User {
 
   Session Session[]
   Invite  Invite[]
+
+  Activity Activity[]
 }
 
 model Account {
@@ -102,6 +104,7 @@ model Playlist {
   Invite      Invite[]
 
   @@index([ownerId, visibility])
+  Activity Activity[]
 }
 
 model Membership {
@@ -201,4 +204,27 @@ model Invite {
 
   @@index([playlistId])
   @@index([createdById])
+}
+
+enum ActivityType {
+  TRACK_ADD
+  TRACK_REMOVE
+  TRACK_REORDER
+  VOTE
+  COMMENT
+}
+
+model Activity {
+  id         String       @id @default(cuid())
+  playlistId String
+  actorId    String?
+  type       ActivityType
+  data       Json
+  createdAt  DateTime     @default(now())
+
+  playlist   Playlist     @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  actor      User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([playlistId, createdAt])
+  @@index([type])
 }

@@ -83,5 +83,22 @@ export async function POST(req: Request) {
   const payload = { playlistTrackId: pt.id }
   await pusherServer.trigger(`playlist-${playlistId}`, 'track:add', payload)
 
+  await prisma.activity.create({
+    data: {
+      playlistId,
+      actorId: session.user.id,
+      type: 'TRACK_ADD',
+      data: {
+        playlistTrackId: pt.id,
+        trackId: track.id,
+        title,
+        artist,
+        album,
+        position: nextPos,
+      },
+    },
+  })
+  await pusherServer.trigger(`playlist-${playlistId}`, 'activity:add', { type: 'TRACK_ADD' })
+
   return NextResponse.json({ id: pt.id }, { status: 201 })
 }
