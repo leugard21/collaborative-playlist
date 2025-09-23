@@ -10,8 +10,8 @@ import { CommentForm } from '@/components/playlists/comment-form'
 import { CommentList } from '@/components/playlists/comment-list'
 import { NowPlayingCard } from '@/components/now-playing/now-playing-card'
 import { InviteButton } from '@/components/playlists/invite-button'
-import { boolean } from 'zod'
 import { RemoveTrackButton } from '@/components/playlists/remove-track-button'
+import { ReorderButtons } from '@/components/playlists/reorder-buttons'
 
 type Props = { params: { id: string } }
 
@@ -146,6 +146,14 @@ export default async function PlaylistDetailPage({ params }: Props) {
                     >
                       {formatMs(pt.track.durationMs)}
                     </span>
+
+                    {canEditUI && (
+                      <ReorderButtons
+                        playlistTrackId={pt.id}
+                        index={items.findIndex((x) => x.id === pt.id)}
+                        maxIndex={items.length - 1}
+                      />
+                    )}
 
                     <VoteButton
                       playlistTrackId={pt.id}

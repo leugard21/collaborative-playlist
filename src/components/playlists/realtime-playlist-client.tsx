@@ -15,11 +15,13 @@ export function RealtimePlaylistClient({ playlistId }: { playlistId: string }) {
     channel.bind('track:add', refresh)
     channel.bind('vote:change', refresh)
     channel.bind('track:remove', refresh)
+    channel.bind('track:reorder', refresh)
 
     return () => {
       channel.unbind('track:add', refresh)
       channel.unbind('vote:change', refresh)
       channel.unbind('track:remove', refresh)
+      channel.unbind('track:reorder', refresh)
       pusher.unsubscribe(`playlist-${playlistId}`)
     }
   }, [playlistId, router])

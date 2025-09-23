@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { PlusCircle, Music2, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { signOut, useSession } from 'next-auth/react'
+import { ThemeToggle } from '../ui/theme-toggle'
 
 export function Header() {
   const { data: session, status } = useSession()
@@ -43,6 +44,8 @@ export function Header() {
               <Link href="/login">Sign in</Link>
             </Button>
           )}
+
+          <ThemeToggle />
         </div>
       </div>
     </header>
