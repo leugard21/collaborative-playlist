@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Collaborative Playlist
 
-## Getting Started
+A modern **collaborative playlist web app** built with Next.js, Spotify API, and real-time updates.  
+Create, share, and manage playlists with friends — add tracks, vote, and comment together in real time.
 
-First, run the development server:
+## Tech Stack
+
+- **Framework**: [Next.js App Router](https://nextjs.org/) (TypeScript, Server Components first)
+- **UI**: [Tailwind CSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/), [lucide-react](https://lucide.dev/)
+- **Auth**: [NextAuth.js](https://next-auth.js.org/) (Spotify OAuth, Google optional)
+- **Database**: [Prisma](https://www.prisma.io/) + PostgreSQL (Supabase / Neon / PlanetScale)
+- **Realtime**: Pusher / Ably / Supabase Realtime
+- **Media API**: [Spotify Web API](https://developer.spotify.com/documentation/web-api)
+- **Testing**: [Vitest](https://vitest.dev/), React Testing Library, Playwright
+- **Quality**: ESLint, Prettier, TypeScript strict mode
+- **Accessibility**: ARIA roles, keyboard support
+- **Performance**: RSC-first data fetching, route-based code-splitting, image optimization
+
+## Features
+
+### Authentication & Profiles
+
+- OAuth login with Spotify (Google optional)
+- Profile page with display name, avatar, connected services
+
+### Playlists
+
+- Create playlist (title, description, visibility: private / link / public)
+- Invite collaborators via share link (owner, editor, viewer roles)
+- Realtime updates for track add, remove, reorder
+
+### Track Management
+
+- Search tracks via Spotify
+- Add tracks to playlist with duplicate detection
+- Display duration, artwork, and metadata
+
+### Voting & Moderation
+
+- Upvote/downvote tracks
+- Auto-rank tracks based on votes
+- Owner/editor can remove or reorder tracks
+
+### Now Playing & Queue
+
+- Display current track, progress, and playback status
+- 30-second previews for non-premium users
+
+### Comments & Activity
+
+- Threaded comments per playlist
+- Activity feed showing adds, removes, and votes
+
+### Responsive UI
+
+- Mobile: bottom navigation (Home, Search, Playlist, Activity, Profile)
+- Desktop: sidebar with keyboard shortcuts
+- Accessible components and full keyboard support
+
+## Development
+
+### Prerequisites
+
+- Node.js
+- PostgreSQL database (Supabase, Neon, or PlanetScale recommended)
+- Spotify Developer account for OAuth
+
+### Setup
 
 ```bash
+# Install dependencies
+npm install
+
+# Setup environment variables
+cp .env.example .env
+
+# Generate Prisma client
+npx prisma generate
+
+# Run database migrations
+npx prisma migrate dev
+
+# Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
